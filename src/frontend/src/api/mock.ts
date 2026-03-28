@@ -43,6 +43,8 @@ export interface Review {
   progress: number
   startTime: string
   endTime: string
+  score?: number
+  scoreTime?: string
 }
 
 export interface Contract {

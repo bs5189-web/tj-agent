@@ -41,7 +41,7 @@
         <el-table-column label="操作" width="160">
           <template #default="{ row }">
             <el-button link type="primary" size="small" @click="openViewDialog(row)">查看</el-button>
-            <el-button link type="primary" size="small">评分</el-button>
+            <el-button link type="primary" size="small" @click="openScoreDialog(row)">评分</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -66,9 +66,46 @@
         <el-descriptions-item label="评审进度">{{ viewData.progress }}%</el-descriptions-item>
         <el-descriptions-item label="开始时间">{{ viewData.startTime }}</el-descriptions-item>
         <el-descriptions-item label="结束时间">{{ viewData.endTime }}</el-descriptions-item>
+        <el-descriptions-item label="评审分数" v-if="viewData.score">{{ viewData.score }}分</el-descriptions-item>
       </el-descriptions>
       <template #footer>
         <el-button @click="viewDialogVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
+
+    <el-dialog v-model="createDialogVisible" title="创建评审" width="500px">
+      <el-form label-width="100px">
+        <el-form-item label="评审文档">
+          <el-input v-model="formData.documentTitle" placeholder="请输入评审文档标题" />
+        </el-form-item>
+        <el-form-item label="专家数量">
+          <el-input-number v-model="formData.expertCount" :min="3" :max="15" />
+        </el-form-item>
+        <el-form-item label="计划开始">
+          <el-date-picker v-model="formData.startTime" type="datetime" placeholder="选择开始时间" value-format="YYYY-MM-DD HH:mm" style="width: 100%" />
+        </el-form-item>
+        <el-form-item label="计划结束">
+          <el-date-picker v-model="formData.endTime" type="datetime" placeholder="选择结束时间" value-format="YYYY-MM-DD HH:mm" style="width: 100%" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="createDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleCreate">创建</el-button>
+      </template>
+    </el-dialog>
+
+    <el-dialog v-model="scoreDialogVisible" title="评审评分" width="500px">
+      <el-form label-width="100px">
+        <el-form-item label="评审编号">{{ scoringReview?.sessionNo }}</el-form-item>
+        <el-form-item label="评审文档">{{ scoringReview?.documentTitle }}</el-form-item>
+        <el-form-item label="评审分数">
+          <el-input-number v-model="scoreForm.score" :min="0" :max="100" :precision="0" />
+          <span style="margin-left: 8px">分</span>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="scoreDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleScore">提交评分</el-button>
       </template>
     </el-dialog>
   </div>
@@ -80,7 +117,10 @@ import { reviewData as mockData } from '@/api/mock'
 import type { Review } from '@/api/mock'
 
 const viewDialogVisible = ref(false)
+const createDialogVisible = ref(false)
+const scoreDialogVisible = ref(false)
 const viewData = ref<Review | null>(null)
+const scoringReview = ref<Review | null>(null)
 
 const currentPage = ref(1)
 const pageSize = ref(10)
@@ -89,6 +129,19 @@ const searchForm = reactive({
   keyword: '',
   status: ''
 })
+
+const formData = reactive({
+  documentTitle: '',
+  expertCount: 5,
+  startTime: '',
+  endTime: ''
+})
+
+const scoreForm = reactive({
+  score: 0
+})
+
+let nextId = Math.max(...mockData.map(r => r.id)) + 1
 
 const allData = ref<Review[]>([...mockData])
 
@@ -116,7 +169,48 @@ const openViewDialog = (row: Review) => {
 }
 
 const openCreateDialog = () => {
-  // 创建评审功能暂未实现
+  formData.documentTitle = ''
+  formData.expertCount = 5
+  formData.startTime = ''
+  formData.endTime = ''
+  createDialogVisible.value = true
+}
+
+const openScoreDialog = (row: Review) => {
+  scoringReview.value = row
+  scoreForm.score = row.score || 0
+  scoreDialogVisible.value = true
+}
+
+const handleCreate = () => {
+  const newReview: Review = {
+    id: nextId++,
+    sessionNo: `REV-2024-${String(nextId).padStart(3, '0')}`,
+    documentTitle: formData.documentTitle,
+    expertCount: formData.expertCount,
+    status: 'preparing',
+    progress: 0,
+    startTime: formData.startTime || '-',
+    endTime: formData.endTime || '-'
+  }
+  allData.value.unshift(newReview)
+  createDialogVisible.value = false
+}
+
+const handleScore = () => {
+  if (scoringReview.value) {
+    const index = allData.value.findIndex(r => r.id === scoringReview.value!.id)
+    if (index !== -1) {
+      allData.value[index] = {
+        ...allData.value[index],
+        score: scoreForm.score,
+        scoreTime: new Date().toISOString().split('T')[0],
+        progress: 100,
+        status: 'completed'
+      }
+    }
+  }
+  scoreDialogVisible.value = false
 }
 
 const handleReset = () => {
