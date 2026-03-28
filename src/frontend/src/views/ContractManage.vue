@@ -43,12 +43,9 @@
 </template>
 
 <script setup lang="ts">
-const tableData = [
-  { id: 1, contractNo: 'CON-2024-089', title: '办公设备采购合同', supplierName: 'XX科技有限公司', totalAmount: 800000, signDate: '2024-02-15', status: 'performing' },
-  { id: 2, contractNo: 'CON-2024-090', title: '软件开发服务合同', supplierName: 'YY软件公司', totalAmount: 1500000, signDate: '2024-03-01', status: 'signed' },
-  { id: 3, contractNo: 'CON-2024-091', title: '网络安全设备合同', supplierName: 'ZZ网络公司', totalAmount: 2000000, signDate: '2024-03-10', status: 'pending' },
-  { id: 4, contractNo: 'CON-2024-088', title: '办公家具采购合同', supplierName: 'AA家具公司', totalAmount: 350000, signDate: '2024-01-20', status: 'completed' },
-]
+import { contractData } from '@/api/mock'
+
+const tableData = contractData
 const getStatusType = (s: string) => ({ draft: 'info', pending: 'warning', signed: 'success', performing: 'primary', completed: 'success' }[s] || 'info')
 const getStatusLabel = (s: string) => ({ draft: '草稿', pending: '待签署', signed: '已签署', performing: '执行中', completed: '已完成' }[s] || s)
 </script>

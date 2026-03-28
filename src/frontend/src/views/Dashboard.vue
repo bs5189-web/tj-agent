@@ -71,30 +71,26 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import * as echarts from 'echarts'
+import { todoListData, warningListData, getDashboardStats } from '@/api/mock'
 
 const trendChartRef = ref<HTMLElement>()
 const pieChartRef = ref<HTMLElement>()
 
-const stats = [
-  { label: '年度采购计划', value: '1,286', trend: 12.5 },
-  { label: '待处理需求', value: '86', trend: -5.2 },
-  { label: '执行中合同', value: '234', trend: 8.1 },
-  { label: '履约完成率', value: '94.6%', trend: 2.3 },
-]
+const stats = computed(() => {
+  const { totalPlans, pendingRequirements, performingContracts, completionRate } = getDashboardStats()
+  return [
+    { label: '年度采购计划', value: totalPlans.toString(), trend: 12.5 },
+    { label: '待处理需求', value: pendingRequirements.toString(), trend: -5.2 },
+    { label: '执行中合同', value: performingContracts.toString(), trend: 8.1 },
+    { label: '履约完成率', value: `${completionRate}%`, trend: 2.3 },
+  ]
+})
 
-const todoList = [
-  { id: 1, title: '审批2024年度采购计划', time: '03-28', priority: '高' },
-  { id: 2, title: '审核采购需求单 #REQ-2024-156', time: '03-28', priority: '高' },
-  { id: 3, title: '合同履约节点确认', time: '03-29', priority: '中' },
-]
+const todoList = todoListData
 
-const warnings = [
-  { id: 1, title: '合同CON-2024-089即将到期', time: '剩余7天', type: 'warning' },
-  { id: 2, title: '履约节点超期3天未处理', time: '超期', type: 'error' },
-  { id: 3, title: '采购需求待审核(5条)', time: '待处理', type: 'info' },
-]
+const warnings = warningListData
 
 const getPriorityType = (priority: string) => {
   const map: Record<string, any> = { '高': 'danger', '中': 'warning', '低': 'info' }

@@ -42,11 +42,9 @@
 </template>
 
 <script setup lang="ts">
-const tableData = [
-  { id: 1, sessionNo: 'REV-2024-001', documentTitle: '办公设备采购评审', expertCount: 5, status: 'completed', progress: 100, startTime: '2024-03-15 09:00', endTime: '2024-03-15 17:00' },
-  { id: 2, sessionNo: 'REV-2024-002', documentTitle: '软件开发服务采购评审', expertCount: 7, status: 'ongoing', progress: 65, startTime: '2024-03-20 09:00', endTime: '-' },
-  { id: 3, sessionNo: 'REV-2024-003', documentTitle: '网络安全设备评审', expertCount: 5, status: 'preparing', progress: 0, startTime: '-', endTime: '-' },
-]
+import { reviewData } from '@/api/mock'
+
+const tableData = reviewData
 const getStatusType = (s: string) => ({ preparing: 'info', ongoing: 'warning', completed: 'success' }[s] || 'info')
 const getStatusLabel = (s: string) => ({ preparing: '准备中', ongoing: '评审中', completed: '已完成' }[s] || s)
 </script>

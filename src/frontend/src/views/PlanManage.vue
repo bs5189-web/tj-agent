@@ -110,6 +110,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue'
+import { planData } from '@/api/mock'
 
 const dialogVisible = ref(false)
 const viewDialogVisible = ref(false)
@@ -128,15 +129,9 @@ const searchForm = reactive({
   status: ''
 })
 
-let nextId = 6
+let nextId = planData.length + 1
 
-const allData = ref([
-  { id: 1, planNo: 'PLAN-2024-001', planYear: 2024, unitName: '信息中心', totalAmount: 5000000, itemCount: 45, status: 'approved', createTime: '2024-01-15' },
-  { id: 2, planNo: 'PLAN-2024-002', planYear: 2024, unitName: '后勤保障部', totalAmount: 3200000, itemCount: 28, status: 'pending', createTime: '2024-01-18' },
-  { id: 3, planNo: 'PLAN-2024-003', planYear: 2024, unitName: '装备管理部', totalAmount: 8500000, itemCount: 62, status: 'draft', createTime: '2024-02-01' },
-  { id: 4, planNo: 'PLAN-2024-004', planYear: 2024, unitName: '科研技术部', totalAmount: 4200000, itemCount: 35, status: 'approved', createTime: '2024-02-10' },
-  { id: 5, planNo: 'PLAN-2024-005', planYear: 2024, unitName: '财务部', totalAmount: 1800000, itemCount: 15, status: 'rejected', createTime: '2024-02-15' },
-])
+const allData = ref([...planData])
 
 const filteredData = computed(() => {
   return allData.value.filter(item => {
@@ -160,7 +155,7 @@ const handleSubmit = () => {
     unitName: newPlanForm.unitName,
     totalAmount: parseInt(newPlanForm.totalAmount) || 0,
     itemCount: 0,
-    status: 'draft',
+    status: 'draft' as const,
     createTime: new Date().toISOString().split('T')[0]
   }
   allData.value.unshift(newPlan)

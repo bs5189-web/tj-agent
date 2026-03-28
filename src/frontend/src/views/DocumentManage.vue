@@ -56,11 +56,9 @@
 </template>
 
 <script setup lang="ts">
-const tableData = [
-  { id: 1, docNo: 'DOC-2024-001', title: '办公设备采购招标文件', category: '货物类', purchaseType: '公开招标', status: 'approved', version: 'V2.1', createTime: '2024-03-10' },
-  { id: 2, docNo: 'DOC-2024-002', title: '软件开发服务采购文件', category: '服务类', purchaseType: '竞争性谈判', status: 'pending', version: 'V1.0', createTime: '2024-03-15' },
-  { id: 3, docNo: 'DOC-2024-003', title: '网络安全设备采购文件', category: '货物类', purchaseType: '邀请招标', status: 'draft', version: 'V1.0', createTime: '2024-03-20' },
-]
+import { documentData } from '@/api/mock'
+
+const tableData = documentData
 const getStatusType = (s: string) => ({ draft: 'info', pending: 'warning', approved: 'success' }[s] || 'info')
 const getStatusLabel = (s: string) => ({ draft: '草稿', pending: '审批中', approved: '已通过' }[s] || s)
 </script>

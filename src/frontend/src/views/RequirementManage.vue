@@ -88,14 +88,11 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { requirementData } from '@/api/mock'
 
 const dialogVisible = ref(false)
 
-const tableData = [
-  { id: 1, reqNo: 'REQ-2024-156', title: '办公设备采购', department: '信息中心', goodsName: '笔记本电脑', estimatedPrice: 80000, urgencyLevel: 'medium', status: 'approved', createTime: '2024-03-15' },
-  { id: 2, reqNo: 'REQ-2024-157', title: '会议室设备更新', department: '后勤保障部', goodsName: '投影仪', estimatedPrice: 45000, urgencyLevel: 'low', status: 'pending', createTime: '2024-03-18' },
-  { id: 3, reqNo: 'REQ-2024-158', title: '安全监控系统', department: '装备管理部', goodsName: '监控摄像头', estimatedPrice: 120000, urgencyLevel: 'high', status: 'checking', createTime: '2024-03-20' },
-]
+const tableData = requirementData
 
 const getUrgencyType = (level: string) => ({ low: 'info', medium: 'warning', high: 'danger' }[level] || 'info')
 const getUrgencyLabel = (level: string) => ({ low: '低', medium: '中', high: '高' }[level] || level)
