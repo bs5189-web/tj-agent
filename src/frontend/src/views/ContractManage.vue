@@ -197,7 +197,7 @@ const handleReset = () => {
   searchForm.status = ''
 }
 
-const getStatusType = (s: string) => ({ draft: 'info', pending: 'warning', signed: 'success', performing: 'primary', completed: 'success' }[s] || 'info')
+const getStatusType = (s: string) => ({ draft: 'info', pending: 'warning', signed: 'success', performing: 'warning', completed: 'success' }[s] || 'info')
 const getStatusLabel = (s: string) => ({ draft: '草稿', pending: '待签署', signed: '已签署', performing: '执行中', completed: '已完成' }[s] || s)
 </script>
 
