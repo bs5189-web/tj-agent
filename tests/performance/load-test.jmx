@@ -1,0 +1,436 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="5.5" xmlns="http://jmeter.apache.org/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jmeter.apache.org/ jmeter_schema.xsd">
+
+  <hashTree>
+    <!-- 智能化采购系统性能测试计划 -->
+
+    <!-- 1. 测试计划配置 -->
+    <TestPlan name="智能化采购系统性能测试" enabled="true" serialized="false">
+      <stringProp name="TestPlan.comments">智能化采购系统性能测试场景</stringProp>
+      <boolProp name="TestPlan.functional_mode">false</boolProp>
+      <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
+      <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" enabled="true">
+        <collectionProp name="Arguments.arguments">
+          <elementProp name="BASE_URL" elementType="Argument">
+            <stringProp name="Argument.name">BASE_URL</stringProp>
+            <stringProp name="Argument.value">http://localhost:3000</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="THREAD_COUNT" elementType="Argument">
+            <stringProp name="Argument.name">THREAD_COUNT</stringProp>
+            <stringProp name="Argument.value">100</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+          <elementProp name="RAMP_UP_PERIOD" elementType="Argument">
+            <stringProp name="Argument.name">RAMP_UP_PERIOD</stringProp>
+            <stringProp name="Argument.value">60</stringProp>
+            <stringProp name="Argument.metadata">=</stringProp>
+          </elementProp>
+        </collectionProp>
+      </elementProp>
+      <boolProp name="TestPlan.tearDown_on_shutdown">true</boolProp>
+    </TestPlan>
+
+    <hashTree>
+      <!-- 全局配置 -->
+      <ConfigTestElement name="HTTP Request Defaults">
+        <elementProp name="HTTPsampler.Arguments" elementType="Arguments" enabled="true">
+          <collectionProp name="Arguments.arguments">
+            <elementProp name="Protocol" elementType="Argument">
+              <stringProp name="Argument.name">Protocol</stringProp>
+              <stringProp name="Argument.value">http</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+            </elementProp>
+          </collectionProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+      </ConfigTestElement>
+
+      <hashTree>
+        <!-- 2. 用户登录性能测试 (100用户并发) -->
+        <ThreadGroup name="用户登录性能测试" enabled="true" on_sample_error="continue">
+          <stringProp name="ThreadGroup.num_threads">100</stringProp>
+          <stringProp name="ThreadGroup.ramp_time">60</stringProp>
+          <stringProp name="ThreadGroup.duration"></stringProp>
+          <stringProp name="ThreadGroup.delay"></stringProp>
+          <boolProp name="ThreadGroup.scheduler">true</boolProp>
+          <stringProp name="ThreadGroup.duration">300</stringProp>
+          <stringProp name="ThreadGroup.startup_delay">10</stringProp>
+
+          <hashTree>
+            <HTTPSamplerProxy guiclass="HttpTestSampleBean" testclass="HTTPSamplerProxy" testname="POST 用户登录" enabled="true">
+              <elementProp name="HTTPsampler.Arguments" elementType="Arguments" enabled="true">
+                <collectionProp name="Arguments.arguments">
+                  <elementProp name="username" elementType="Argument">
+                    <stringProp name="Argument.name">username</stringProp>
+                    <stringProp name="Argument.value">user${__threadNum}</stringProp>
+                  </elementProp>
+                  <elementProp name="password" elementType="Argument">
+                    <stringProp name="Argument.name">password</stringProp>
+                    <stringProp name="Argument.value">password123</stringProp>
+                  </elementProp>
+                </collectionProp>
+              </elementProp>
+              <stringProp name="HTTPSampler.domain">localhost</stringProp>
+              <stringProp name="HTTPSampler.port">3000</stringProp>
+              <stringProp name="HTTPSampler.path">/api/auth/login</stringProp>
+              <stringProp name="HTTPSampler.method">POST</stringProp>
+              <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+              <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+              <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+              <boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+              <stringProp name="HTTPSampler.contentEncoding"></stringProp>
+              <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+              <stringProp name="HTTPSampler.response_timeout"></stringProp>
+
+              <hashTree>
+                <JSONPostProcessor guiclass="JSONPostProcessor" testclass="JSONPostProcessor" testname="提取Token" enabled="true">
+                  <stringProp name="JSONPostProcessor.reference.names">auth_token</stringProp>
+                  <stringProp name="JSONPostProcessor.json_path_exprs">$.data.token</stringProp>
+                  <stringProp name="JSONPostProcessor.match_numbers"></stringProp>
+                </JSONPostProcessor>
+              </hashTree>
+            </HTTPSamplerProxy>
+          </hashTree>
+        </ThreadGroup>
+
+        <hashTree>
+          <!-- 3. 采购计划查询性能测试 -->
+          <ThreadGroup name="采购计划查询性能测试" enabled="true" on_sample_error="continue">
+            <stringProp name="ThreadGroup.num_threads">50</stringProp>
+            <stringProp name="ThreadGroup.ramp_time">30</stringProp>
+            <boolProp name="ThreadGroup.scheduler">true</boolProp>
+            <stringProp name="ThreadGroup.duration">300</stringProp>
+
+            <hashTree>
+              <HTTPSamplerProxy guiclass="HttpTestSampleBean" testclass="HTTPSamplerProxy" testname="GET 查询年度计划列表" enabled="true">
+                <elementProp name="HTTPsampler.Arguments" elementType="Arguments" enabled="true">
+                  <collectionProp name="Arguments.arguments">
+                    <elementProp name="page" elementType="Argument">
+                      <stringProp name="Argument.name">page</stringProp>
+                      <stringProp name="Argument.value">1</stringProp>
+                    </elementProp>
+                    <elementProp name="pageSize" elementType="Argument">
+                      <stringProp name="Argument.name">pageSize</stringProp>
+                      <stringProp name="Argument.value">20</stringProp>
+                    </elementProp>
+                  </collectionProp>
+                </elementProp>
+                <stringProp name="HTTPSampler.domain">localhost</stringProp>
+                <stringProp name="HTTPSampler.port">3000</stringProp>
+                <stringProp name="HTTPSampler.path">/api/plan/annual</stringProp>
+                <stringProp name="HTTPSampler.method">GET</stringProp>
+              </HTTPSamplerProxy>
+            </hashTree>
+
+            <hashTree>
+              <HTTPSamplerProxy guiclass="HttpTestSampleBean" testclass="HTTPSamplerProxy" testname="GET 查询计划详情" enabled="true">
+                <stringProp name="HTTPSampler.domain">localhost</stringProp>
+                <stringProp name="HTTPSampler.port">3000</stringProp>
+                <stringProp name="HTTPSampler.path">/api/plan/annual/${plan_id}</stringProp>
+                <stringProp name="HTTPSampler.method">GET</stringProp>
+              </HTTPSamplerProxy>
+            </hashTree>
+          </ThreadGroup>
+        </hashTree>
+
+        <hashTree>
+          <!-- 4. 大数据量查询性能测试 (10000+记录) -->
+          <ThreadGroup name="大数据量查询性能测试" enabled="true" on_sample_error="continue">
+            <stringProp name="ThreadGroup.num_threads">30</stringProp>
+            <stringProp name="ThreadGroup.ramp_time">20</stringProp>
+            <boolProp name="ThreadGroup.scheduler">true</boolProp>
+            <stringProp name="ThreadGroup.duration">300</stringProp>
+
+            <hashTree>
+              <HTTPSamplerProxy guiclass="HttpTestSampleBean" testclass="HTTPSamplerProxy" testname="GET 查询大数据量列表(分页)" enabled="true">
+                <elementProp name="HTTPsampler.Arguments" elementType="Arguments" enabled="true">
+                  <collectionProp name="Arguments.arguments">
+                    <elementProp name="page" elementType="Argument">
+                      <stringProp name="Argument.name">page</stringProp>
+                      <stringProp name="Argument.value">1</stringProp>
+                    </elementProp>
+                    <elementProp name="pageSize" elementType="Argument">
+                      <stringProp name="Argument.name">pageSize</stringProp>
+                      <stringProp name="Argument.value">100</stringProp>
+                    </elementProp>
+                  </collectionProp>
+                </elementProp>
+                <stringProp name="HTTPSampler.domain">localhost</stringProp>
+                <stringProp name="HTTPSampler.port">3000</stringProp>
+                <stringProp name="HTTPSampler.path">/api/plan/annual</stringProp>
+                <stringProp name="HTTPSampler.method">GET</stringProp>
+              </HTTPSamplerProxy>
+            </hashTree>
+
+            <hashTree>
+              <HTTPSamplerProxy guiclass="HttpTestSampleBean" testclass="HTTPSamplerProxy" testname="POST 统计查询" enabled="true">
+                <elementProp name="HTTPsampler.Arguments" elementType="Arguments" enabled="true">
+                  <collectionProp name="Arguments.arguments">
+                    <elementProp name="startDate" elementType="Argument">
+                      <stringProp name="Argument.name">startDate</stringProp>
+                      <stringProp name="Argument.value">2023-01-01</stringProp>
+                    </elementProp>
+                    <elementProp name="endDate" elementType="Argument">
+                      <stringProp name="Argument.name">endDate</stringProp>
+                      <stringProp name="Argument.value">2024-12-31</stringProp>
+                    </elementProp>
+                  </collectionProp>
+                </elementProp>
+                <stringProp name="HTTPSampler.domain">localhost</stringProp>
+                <stringProp name="HTTPSampler.port">3000</stringProp>
+                <stringProp name="HTTPSampler.path">/api/plan/statistics</stringProp>
+                <stringProp name="HTTPSampler.method">POST</stringProp>
+              </HTTPSamplerProxy>
+            </hashTree>
+          </ThreadGroup>
+        </hashTree>
+
+        <hashTree>
+          <!-- 5. 采购需求并发创建测试 -->
+          <ThreadGroup name="采购需求并发创建测试" enabled="true" on_sample_error="continue">
+            <stringProp name="ThreadGroup.num_threads">50</stringProp>
+            <stringProp name="ThreadGroup.ramp_time">30</stringProp>
+            <boolProp name="ThreadGroup.scheduler">true</boolProp>
+            <stringProp name="ThreadGroup.duration">300</stringProp>
+
+            <hashTree>
+              <HTTPSamplerProxy guiclass="HttpTestSampleBean" testclass="HTTPSamplerProxy" testname="POST 创建采购需求" enabled="true">
+                <elementProp name="HTTPsampler.Arguments" elementType="Arguments" enabled="true">
+                  <collectionProp name="Arguments.arguments">
+                    <elementProp name="name" elementType="Argument">
+                      <stringProp name="Argument.name">name</stringProp>
+                      <stringProp name="Argument.value">采购需求-${__threadNum}-${__time}</stringProp>
+                    </elementProp>
+                    <elementProp name="specification" elementType="Argument">
+                      <stringProp name="Argument.name">specification</stringProp>
+                      <stringProp name="Argument.value">规格说明-${__threadNum}</stringProp>
+                    </elementProp>
+                    <elementProp name="quantity" elementType="Argument">
+                      <stringProp name="Argument.name">quantity</stringProp>
+                      <stringProp name="Argument.value">${__Random(1,100)}</stringProp>
+                    </elementProp>
+                    <elementProp name="budget" elementType="Argument">
+                      <stringProp name="Argument.name">budget</stringProp>
+                      <stringProp name="Argument.value">${__Random(10000,100000)}</stringProp>
+                    </elementProp>
+                    <elementProp name="category" elementType="Argument">
+                      <stringProp name="Argument.name">category</stringProp>
+                      <stringProp name="Argument.value">goods</stringProp>
+                    </elementProp>
+                    <elementProp name="department" elementType="Argument">
+                      <stringProp name="Argument.name">department</stringProp>
+                      <stringProp name="Argument.value">技术部</stringProp>
+                    </elementProp>
+                    <elementProp name="requester" elementType="Argument">
+                      <stringProp name="Argument.name">requester</stringProp>
+                      <stringProp name="Argument.value">用户${__threadNum}</stringProp>
+                    </elementProp>
+                  </collectionProp>
+                </elementProp>
+                <stringProp name="HTTPSampler.domain">localhost</stringProp>
+                <stringProp name="HTTPSampler.port">3000</stringProp>
+                <stringProp name="HTTPSampler.path">/api/requirement</stringProp>
+                <stringProp name="HTTPSampler.method">POST</stringProp>
+              </HTTPSamplerProxy>
+            </hashTree>
+          </ThreadGroup>
+        </hashTree>
+
+        <hashTree>
+          <!-- 6. 审批流程并发测试 -->
+          <ThreadGroup name="审批流程并发测试" enabled="true" on_sample_error="continue">
+            <stringProp name="ThreadGroup.num_threads">30</stringProp>
+            <stringProp name="ThreadGroup.ramp_time">20</stringProp>
+            <boolProp name="ThreadGroup.scheduler">true</boolProp>
+            <stringProp name="ThreadGroup.duration">300</stringProp>
+
+            <hashTree>
+              <HTTPSamplerProxy guiclass="HttpTestSampleBean" testclass="HTTPSamplerProxy" testname="PUT 审批需求" enabled="true">
+                <elementProp name="HTTPsampler.Arguments" elementType="Arguments" enabled="true">
+                  <collectionProp name="Arguments.arguments">
+                    <elementProp name="action" elementType="Argument">
+                      <stringProp name="Argument.name">action</stringProp>
+                      <stringProp name="Argument.value">approve</stringProp>
+                    </elementProp>
+                    <elementProp name="comment" elementType="Argument">
+                      <stringProp name="Argument.name">comment</stringProp>
+                      <stringProp name="Argument.value">审批通过-${__threadNum}</stringProp>
+                    </elementProp>
+                    <elementProp name="node" elementType="Argument">
+                      <stringProp name="Argument.name">node</stringProp>
+                      <stringProp name="Argument.value">department_review</stringProp>
+                    </elementProp>
+                  </collectionProp>
+                </elementProp>
+                <stringProp name="HTTPSampler.domain">localhost</stringProp>
+                <stringProp name="HTTPSampler.port">3000</stringProp>
+                <stringProp name="HTTPSampler.path">/api/requirement/${req_id}/approve</stringProp>
+                <stringProp name="HTTPSampler.method">PUT</stringProp>
+              </HTTPSamplerProxy>
+            </hashTree>
+          </ThreadGroup>
+        </hashTree>
+
+        <hashTree>
+          <!-- 7. 文件生成并发测试 -->
+          <ThreadGroup name="文件生成并发测试" enabled="true" on_sample_error="continue">
+            <stringProp name="ThreadGroup.num_threads">20</stringProp>
+            <stringProp name="ThreadGroup.ramp_time">15</stringProp>
+            <boolProp name="ThreadGroup.scheduler">true</boolProp>
+            <stringProp name="ThreadGroup.duration">300</stringProp>
+
+            <hashTree>
+              <HTTPSamplerProxy guiclass="HttpTestSampleBean" testclass="HTTPSamplerProxy" testname="POST 生成文件" enabled="true">
+                <elementProp name="HTTPsampler.Arguments" elementType="Arguments" enabled="true">
+                  <collectionProp name="Arguments.arguments">
+                    <elementProp name="type" elementType="Argument">
+                      <stringProp name="Argument.name">type</stringProp>
+                      <stringProp name="Argument.value">tender_document</stringProp>
+                    </elementProp>
+                    <elementProp name="templateId" elementType="Argument">
+                      <stringProp name="Argument.name">templateId</stringProp>
+                      <stringProp name="Argument.value">TPL-001</stringProp>
+                    </elementProp>
+                    <elementProp name="requirementId" elementType="Argument">
+                      <stringProp name="Argument.name">requirementId</stringProp>
+                      <stringProp name="Argument.value">REQ-${__threadNum}</stringProp>
+                    </elementProp>
+                    <elementProp name="title" elementType="Argument">
+                      <stringProp name="Argument.name">title</stringProp>
+                      <stringProp name="Argument.value">采购文件-${__threadNum}-${__time}</stringProp>
+                    </elementProp>
+                  </collectionProp>
+                </elementProp>
+                <stringProp name="HTTPSampler.domain">localhost</stringProp>
+                <stringProp name="HTTPSampler.port">3000</stringProp>
+                <stringProp name="HTTPSampler.path">/api/document/generate</stringProp>
+                <stringProp name="HTTPSampler.method">POST</stringProp>
+              </HTTPSamplerProxy>
+            </hashTree>
+          </ThreadGroup>
+        </hashTree>
+
+        <hashTree>
+          <!-- 8. 合同履约查询性能测试 -->
+          <ThreadGroup name="合同履约查询性能测试" enabled="true" on_sample_error="continue">
+            <stringProp name="ThreadGroup.num_threads">30</stringProp>
+            <stringProp name="ThreadGroup.ramp_time">20</stringProp>
+            <boolProp name="ThreadGroup.scheduler">true</boolProp>
+            <stringProp name="ThreadGroup.duration">300</stringProp>
+
+            <hashTree>
+              <HTTPSamplerProxy guiclass="HttpTestSampleBean" testclass="HTTPSamplerProxy" testname="GET 查询合同履约状态" enabled="true">
+                <stringProp name="HTTPSampler.domain">localhost</stringProp>
+                <stringProp name="HTTPSampler.port">3000</stringProp>
+                <stringProp name="HTTPSampler.path">/api/contract/${contract_id}/performance</stringProp>
+                <stringProp name="HTTPSampler.method">GET</stringProp>
+              </HTTPSamplerProxy>
+            </hashTree>
+
+            <hashTree>
+              <HTTPSamplerProxy guiclass="HttpTestSampleBean" testclass="HTTPSamplerProxy" testname="PUT 更新履约状态" enabled="true">
+                <elementProp name="HTTPsampler.Arguments" elementType="Arguments" enabled="true">
+                  <collectionProp name="Arguments.arguments">
+                    <elementProp name="milestone" elementType="Argument">
+                      <stringProp name="Argument.name">milestone</stringProp>
+                      <stringProp name="Argument.value">delivery</stringProp>
+                    </elementProp>
+                    <elementProp name="status" elementType="Argument">
+                      <stringProp name="Argument.name">status</stringProp>
+                      <stringProp name="Argument.value">completed</stringProp>
+                    </elementProp>
+                    <elementProp name="actualDate" elementType="Argument">
+                      <stringProp name="Argument.name">actualDate</stringProp>
+                      <stringProp name="Argument.value">2024-04-15</stringProp>
+                    </elementProp>
+                    <elementProp name="remark" elementType="Argument">
+                      <stringProp name="Argument.name">remark</stringProp>
+                      <stringProp name="Argument.value">设备已送达-${__threadNum}</stringProp>
+                    </elementProp>
+                  </collectionProp>
+                </elementProp>
+                <stringProp name="HTTPSampler.domain">localhost</stringProp>
+                <stringProp name="HTTPSampler.port">3000</stringProp>
+                <stringProp name="HTTPSampler.path">/api/contract/${contract_id}/performance/update</stringProp>
+                <stringProp name="HTTPSampler.method">PUT</stringProp>
+              </HTTPSamplerProxy>
+            </hashTree>
+          </ThreadGroup>
+        </hashTree>
+
+        <hashTree>
+          <!-- 9. 监听器配置 -->
+          <ResultCollector guiclass="TableVisualizer" testclass="ResultCollector" testname="查看结果树" enabled="true">
+            <boolProp name="ResultCollector.error_logging">true</boolProp>
+            <objProp>
+              <name>saveConfig</name>
+              <value class="SampleSaveConfiguration">
+                <stringProp name="time">true</stringProp>
+                <stringProp name="latency">true</stringProp>
+                <stringProp name="timestamp">true</stringProp>
+                <stringProp name="success">true</stringProp>
+                <stringProp name="label">true</stringProp>
+                <stringProp name="code">true</stringProp>
+                <stringProp name="message">true</stringProp>
+                <stringProp name="threadName">true</stringProp>
+                <stringProp name="dataType">true</stringProp>
+                <stringProp name="encoding">UTF-8</stringProp>
+                <stringProp name="assertions">true</stringProp>
+                <stringProp name="subresults">true</stringProp>
+                <stringProp name="responseData">true</stringProp>
+                <stringProp name="samplerData">true</stringProp>
+                <stringProp name="xml">true</stringProp>
+                <stringProp name="consecutiveErrors">true</stringProp>
+                <stringProp name="saveAssertionResultsFailureMessage">true</stringProp>
+                <stringProp name="saveResponseData">true</stringProp>
+              </value>
+            </objProp>
+            <stringProp name="filename">./performance/results/result-tree.csv</stringProp>
+          </ResultCollector>
+
+          <hashTree>
+            <ResultCollector guiclass="StatVisualizer" testclass="ResultCollector" testname="聚合报告" enabled="true">
+              <objProp>
+                <name>saveConfig</name>
+                <value class="SampleSaveConfiguration">
+                  <stringProp name="time">true</stringProp>
+                  <stringProp name="latency">true</stringProp>
+                  <stringProp name="timestamp">true</stringProp>
+                  <stringProp name="success">true</stringProp>
+                  <stringProp name="label">true</stringProp>
+                  <stringProp name="code">true</stringProp>
+                  <stringProp name="message">true</stringProp>
+                  <stringProp name="threadName">true</stringProp>
+                </value>
+              </objProp>
+              <stringProp name="filename">./performance/results/aggregate-report.csv</stringProp>
+            </ResultCollector>
+          </hashTree>
+
+          <hashTree>
+            <ResultCollector guiclass="GraphVisualizer" testclass="ResultCollector" testname="图形结果" enabled="true">
+              <objProp>
+                <name>saveConfig</name>
+                <value class="SampleSaveConfiguration">
+                  <stringProp name="time">true</stringProp>
+                  <stringProp name="latency">true</stringProp>
+                  <stringProp name="timestamp">true</stringProp>
+                  <stringProp name="success">true</stringProp>
+                  <stringProp name="label">true</stringProp>
+                </value>
+              </objProp>
+              <stringProp name="filename">./performance/results/graph-results.csv</stringProp>
+            </ResultCollector>
+          </hashTree>
+
+          <hashTree>
+            <SummaryReport guiclass="SummaryReport" testclass="SummaryReport" testname="摘要报告" enabled="true">
+              <stringProp name="filename">./performance/results/summary-report.csv</stringProp>
+            </SummaryReport>
+          </hashTree>
+        </hashTree>
+      </hashTree>
+    </hashTree>
+  </hashTree>
+</jmeterTestPlan>

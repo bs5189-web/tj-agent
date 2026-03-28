@@ -1,0 +1,823 @@
+{
+  "info": {
+    "name": "智能化采购系统 API测试",
+    "description": "智能化采购系统接口测试集合",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api"
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "1. 采购计划管理",
+      "item": [
+        {
+          "name": "1.1 创建年度计划",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('响应状态码为200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('返回计划ID', function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('id');",
+                  "});",
+                  "pm.test('计划状态为待审批', function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.status).to.eql('pending');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"2024年度办公设备采购计划\",\n    \"budget\": 500000,\n    \"category\": \"goods\",\n    \"department\": \"技术部\",\n    \"year\": 2024,\n    \"items\": [\n        {\n            \"name\": \"联想ThinkPad笔记本\",\n            \"specification\": \"ThinkPad X1 Carbon\",\n            \"quantity\": 10,\n            \"unitPrice\": 10000,\n            \"totalPrice\": 100000\n        },\n        {\n            \"name\": \"Dell显示器\",\n            \"specification\": \"Dell U2720Q\",\n            \"quantity\": 20,\n            \"unitPrice\": 3500,\n            \"totalPrice\": 70000\n        }\n    ],\n    \"remark\": \"年度办公设备更新计划\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/plan/annual",
+              "host": ["{{baseUrl}}"],
+              "path": ["plan", "annual"]
+            },
+            "description": "创建年度采购计划"
+          }
+        },
+        {
+          "name": "1.2 查询年度计划",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('响应状态码为200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('返回计划详情', function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('id');",
+                  "    pm.expect(jsonData.data).to.have.property('name');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/plan/annual/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["plan", "annual", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "PLAN-2024-001",
+                  "description": "计划ID"
+                }
+              ]
+            },
+            "description": "根据ID查询年度计划详情"
+          }
+        },
+        {
+          "name": "1.3 查询计划列表",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('响应状态码为200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('返回计划列表', function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "});",
+                  "pm.test('列表支持分页', function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('total');",
+                  "    pm.expect(jsonData.data).to.have.property('page');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/plan/annual?page=1&pageSize=10&year=2024&status=all",
+              "host": ["{{baseUrl}}"],
+              "path": ["plan", "annual"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                },
+                {
+                  "key": "year",
+                  "value": "2024"
+                },
+                {
+                  "key": "status",
+                  "value": "all"
+                }
+              ]
+            },
+            "description": "查询年度计划列表，支持分页和筛选"
+          }
+        },
+        {
+          "name": "1.4 季度计划审批",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('响应状态码为200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('审批状态更新成功', function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"action\": \"approve\",\n    \"comment\": \"同意按预算执行\",\n    \"approverId\": \"USER-001\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/plan/quarterly/:id/approve",
+              "host": ["{{baseUrl}}"],
+              "path": ["plan", "quarterly", ":id", "approve"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "PLAN-2024-Q1-001",
+                  "description": "季度计划ID"
+                }
+              ]
+            },
+            "description": "审批季度采购计划"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. 采购需求管理",
+      "item": [
+        {
+          "name": "2.1 发起采购需求",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('响应状态码为200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('需求创建成功', function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('id');",
+                  "    pm.expect(jsonData.data.status).to.eql('pending_review');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"联想ThinkPad笔记本采购\",\n    \"specification\": \"ThinkPad X1 Carbon\",\n    \"quantity\": 10,\n    \"budget\": 100000,\n    \"category\": \"goods\",\n    \"department\": \"技术部\",\n    \"requester\": \"张三\",\n    \"urgency\": \"normal\",\n    \"attachments\": [],\n    \"remark\": \"用于研发部门设备更新\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/requirement",
+              "host": ["{{baseUrl}}"],
+              "path": ["requirement"]
+            },
+            "description": "发起新的采购需求"
+          }
+        },
+        {
+          "name": "2.2 查询需求详情",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('响应状态码为200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('返回需求详情', function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('id');",
+                  "    pm.expect(jsonData.data).to.have.property('complianceCheck');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/requirement/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["requirement", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "REQ-2024-001",
+                  "description": "需求ID"
+                }
+              ]
+            },
+            "description": "根据ID查询需求详情"
+          }
+        },
+        {
+          "name": "2.3 审批需求",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('响应状态码为200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('审批流程正确', function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.status).to.be.oneOf(['approved', 'rejected', 'pending_next_approval']);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"action\": \"approve\",\n    \"comment\": \"同意采购\",\n    \"node\": \"department_review\",\n    \"approverId\": \"USER-002\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/requirement/:id/approve",
+              "host": ["{{baseUrl}}"],
+              "path": ["requirement", ":id", "approve"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "REQ-2024-001",
+                  "description": "需求ID"
+                }
+              ]
+            },
+            "description": "审批采购需求"
+          }
+        },
+        {
+          "name": "2.4 合规检查",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('响应状态码为200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('合规检查结果正确', function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('passed');",
+                  "    pm.expect(jsonData.data).to.have.property('warnings');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"requirementId\": \"REQ-2024-001\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/requirement/:id/compliance-check",
+              "host": ["{{baseUrl}}"],
+              "path": ["requirement", ":id", "compliance-check"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "REQ-2024-001",
+                  "description": "需求ID"
+                }
+              ]
+            },
+            "description": "对采购需求进行合规检查"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. 采购文件管理",
+      "item": [
+        {
+          "name": "3.1 生成采购文件",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('响应状态码为200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('文件生成成功', function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('id');",
+                  "    pm.expect(jsonData.data).to.have.property('fileUrl');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"type\": \"tender_document\",\n    \"templateId\": \"TPL-001\",\n    \"requirementId\": \"REQ-2024-001\",\n    \"title\": \"办公设备采购招标书\",\n    \"content\": {\n        \"projectName\": \"2024年度办公设备采购\",\n        \"budget\": 100000,\n        \"qualification\": \"具有相关资质证书\",\n        \"deadline\": \"2024-03-31\"\n    }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/document/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["document", "generate"]
+            },
+            "description": "根据需求生成采购文件"
+          }
+        },
+        {
+          "name": "3.2 查询文件列表",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('响应状态码为200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('返回文件列表', function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/document?page=1&pageSize=20&type=all",
+              "host": ["{{baseUrl}}"],
+              "path": ["document"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20"
+                },
+                {
+                  "key": "type",
+                  "value": "all"
+                }
+              ]
+            },
+            "description": "查询采购文件列表"
+          }
+        },
+        {
+          "name": "3.3 文件版本对比",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('响应状态码为200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('返回版本对比结果', function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('diff');",
+                  "    pm.expect(jsonData.data).to.have.property('versions');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/document/:id/versions/compare?version1=1&version2=2",
+              "host": ["{{baseUrl}}"],
+              "path": ["document", ":id", "versions", "compare"],
+              "query": [
+                {
+                  "key": "version1",
+                  "value": "1"
+                },
+                {
+                  "key": "version2",
+                  "value": "2"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "DOC-001",
+                  "description": "文件ID"
+                }
+              ]
+            },
+            "description": "对比文件两个版本的差异"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. 采购评审管理",
+      "item": [
+        {
+          "name": "4.1 专家评分",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('响应状态码为200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('评分提交成功', function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"evaluationId\": \"EVA-2024-001\",\n    \"expertId\": \"EXPERT-001\",\n    \"scores\": {\n        \"technical\": 85,\n        \"price\": 90,\n        \"service\": 88,\n        \"delivery\": 86\n    },\n    \"comment\": \"技术方案优秀，价格合理\",\n    \"recommendation\": \"推荐中标\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/evaluation/:id/score",
+              "host": ["{{baseUrl}}"],
+              "path": ["evaluation", ":id", "score"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "EVA-2024-001",
+                  "description": "评审ID"
+                }
+              ]
+            },
+            "description": "专家对采购项目进行评分"
+          }
+        },
+        {
+          "name": "4.2 汇总评审结果",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('响应状态码为200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('返回汇总结果', function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('finalScore');",
+                  "    pm.expect(jsonData.data).to.have.property('ranking');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/evaluation/:id/result",
+              "host": ["{{baseUrl}}"],
+              "path": ["evaluation", ":id", "result"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "EVA-2024-001",
+                  "description": "评审ID"
+                }
+              ]
+            },
+            "description": "汇总评审结果"
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. 合同管理",
+      "item": [
+        {
+          "name": "5.1 生成采购合同",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('响应状态码为200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('合同生成成功', function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('contractNo');",
+                  "    pm.expect(jsonData.data.status).to.eql('draft');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"requirementId\": \"REQ-2024-001\",\n    \"supplierId\": \"SUP-001\",\n    \"contractAmount\": 98000,\n    \"paymentTerms\": \"预付30%，交货后付70%\",\n    \"deliveryDate\": \"2024-04-30\",\n    \"warrantyPeriod\": \"12个月\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/contract/generate",
+              "host": ["{{baseUrl}}"],
+              "path": ["contract", "generate"]
+            },
+            "description": "根据采购结果生成合同"
+          }
+        },
+        {
+          "name": "5.2 查询合同列表",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('响应状态码为200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('返回合同列表', function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/contract?page=1&pageSize=10&status=all",
+              "host": ["{{baseUrl}}"],
+              "path": ["contract"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": "all"
+                }
+              ]
+            },
+            "description": "查询合同列表"
+          }
+        },
+        {
+          "name": "5.3 履约跟踪",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('响应状态码为200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('返回履约信息', function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('status');",
+                  "    pm.expect(jsonData.data).to.have.property('milestones');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/contract/:id/performance",
+              "host": ["{{baseUrl}}"],
+              "path": ["contract", ":id", "performance"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "CON-2024-001",
+                  "description": "合同ID"
+                }
+              ]
+            },
+            "description": "查询合同履约跟踪信息"
+          }
+        },
+        {
+          "name": "5.4 更新履约状态",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('响应状态码为200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('履约状态更新成功', function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"milestone\": \"delivery\",\n    \"status\": \"completed\",\n    \"actualDate\": \"2024-04-15\",\n    \"remark\": \"设备已送达并验收合格\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/contract/:id/performance/update",
+              "host": ["{{baseUrl}}"],
+              "path": ["contract", ":id", "performance", "update"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "CON-2024-001",
+                  "description": "合同ID"
+                }
+              ]
+            },
+            "description": "更新合同履约状态"
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. 用户认证",
+      "item": [
+        {
+          "name": "6.1 用户登录",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('响应状态码为200', function() {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('返回Token', function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('token');",
+                  "});",
+                  "pm.test('Token类型正确', function() {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.tokenType).to.eql('Bearer');",
+                  "});",
+                  "",
+                  "// 保存token供后续接口使用",
+                  "var jsonData = pm.response.json();",
+                  "pm.collectionVariables.set('token', jsonData.data.token);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"username\": \"admin\",\n    \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "用户登录获取Token"
+          }
+        }
+      ]
+    }
+  ]
+}

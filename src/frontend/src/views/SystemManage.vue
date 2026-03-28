@@ -87,6 +87,104 @@
           />
         </el-tab-pane>
 
+        <el-tab-pane label="数据字典" name="dict">
+          <div class="tab-header">
+            <el-input v-model="dictSearchForm.keyword" placeholder="搜索字典编码/名称" style="width: 240px" prefix-icon="Search" />
+            <el-select v-model="dictSearchForm.type" placeholder="字典类型" style="width: 120px">
+              <el-option label="全部" value="" />
+              <el-option label="系统字典" value="system" />
+              <el-option label="业务字典" value="business" />
+            </el-select>
+            <el-button type="primary" @click="openDictDialog()">新增字典</el-button>
+          </div>
+          <el-table :data="paginatedDictData" stripe>
+            <el-table-column prop="dictType" label="字典类型" width="120">
+              <template #default="{ row }">
+                <el-tag :type="row.dictType === 'system' ? 'primary' : 'success'" size="small">
+                  {{ row.dictType === 'system' ? '系统字典' : '业务字典' }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="dictCode" label="字典编码" width="150" />
+            <el-table-column prop="dictName" label="字典名称" width="150" />
+            <el-table-column prop="dictValue" label="字典值" />
+            <el-table-column prop="sortOrder" label="排序" width="80" />
+            <el-table-column prop="status" label="状态" width="80">
+              <template #default="{ row }">
+                <el-tag :type="row.status === 'active' ? 'success' : 'info'" size="small">
+                  {{ row.status === 'active' ? '启用' : '禁用' }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="120">
+              <template #default="{ row }">
+                <el-button link type="primary" size="small" @click="openDictDialog(row)">编辑</el-button>
+                <el-button link type="danger" size="small" @click="handleDeleteDict(row)">删除</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+          <el-pagination
+            v-model:current-page="dictPage"
+            v-model:page-size="dictPageSize"
+            :total="filteredDictData.length"
+            :page-sizes="[10, 20, 50]"
+            layout="total, sizes, prev, pager, next"
+            style="margin-top: 16px; justify-content: flex-end;"
+          />
+        </el-tab-pane>
+
+        <el-tab-pane label="系统配置" name="config">
+          <div class="config-form">
+            <el-form label-width="140px" :model="sysConfigForm">
+              <el-form-item label="会话超时时间">
+                <el-input-number v-model="sysConfigForm.sessionTimeout" :min="5" :max="120" />
+                <span class="form-tip">分钟</span>
+              </el-form-item>
+              <el-form-item label="密码最小长度">
+                <el-input-number v-model="sysConfigForm.passwordMinLength" :min="6" :max="20" />
+              </el-form-item>
+              <el-form-item label="密码复杂度要求">
+                <el-checkbox v-model="sysConfigForm.requireUppercase">必须包含大写字母</el-checkbox>
+                <el-checkbox v-model="sysConfigForm.requireLowercase">必须包含小写字母</el-checkbox>
+                <el-checkbox v-model="sysConfigForm.requireNumber">必须包含数字</el-checkbox>
+                <el-checkbox v-model="sysConfigForm.requireSpecial">必须包含特殊字符</el-checkbox>
+              </el-form-item>
+              <el-form-item label="密码有效期">
+                <el-input-number v-model="sysConfigForm.passwordExpireDays" :min="0" :max="365" />
+                <span class="form-tip">天 (0表示不限制)</span>
+              </el-form-item>
+              <el-form-item label="登录失败锁定次数">
+                <el-input-number v-model="sysConfigForm.maxLoginFailures" :min="3" :max="10" />
+                <span class="form-tip">次</span>
+              </el-form-item>
+              <el-form-item label="自动备份周期">
+                <el-select v-model="sysConfigForm.backupCycle" style="width: 200px">
+                  <el-option label="每天" value="daily" />
+                  <el-option label="每周" value="weekly" />
+                  <el-option label="每月" value="monthly" />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="数据保留期限">
+                <el-input-number v-model="sysConfigForm.dataRetentionDays" :min="30" :max="3650" />
+                <span class="form-tip">天</span>
+              </el-form-item>
+              <el-form-item label="启用双因素认证">
+                <el-switch v-model="sysConfigForm.twoFactorEnabled" />
+              </el-form-item>
+              <el-form-item label="允许并发登录">
+                <el-switch v-model="sysConfigForm.allowConcurrentLogin" />
+              </el-form-item>
+              <el-form-item label="系统维护模式">
+                <el-switch v-model="sysConfigForm.maintenanceMode" />
+              </el-form-item>
+            </el-form>
+            <div class="form-footer">
+              <el-button type="primary" @click="handleSaveConfig">保存配置</el-button>
+              <el-button @click="handleResetConfig">重置</el-button>
+            </div>
+          </div>
+        </el-tab-pane>
+
         <el-tab-pane label="操作日志" name="logs">
           <div class="tab-header">
             <el-input v-model="logSearchForm.keyword" placeholder="搜索操作人/内容" style="width: 240px" prefix-icon="Search" />
@@ -192,11 +290,40 @@
         <el-button type="primary" @click="orgDialogVisible = false">保存</el-button>
       </template>
     </el-dialog>
+
+    <!-- 数据字典对话框 -->
+    <el-dialog v-model="dictDialogVisible" :title="editingDict ? '编辑字典' : '新增字典'" width="500px">
+      <el-form label-width="100px">
+        <el-form-item label="字典类型">
+          <el-select v-model="dictForm.dictType" style="width: 100%">
+            <el-option label="系统字典" value="system" />
+            <el-option label="业务字典" value="business" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="字典编码"><el-input v-model="dictForm.dictCode" placeholder="请输入字典编码" /></el-form-item>
+        <el-form-item label="字典名称"><el-input v-model="dictForm.dictName" placeholder="请输入字典名称" /></el-form-item>
+        <el-form-item label="字典值"><el-input v-model="dictForm.dictValue" placeholder="请输入字典值" /></el-form-item>
+        <el-form-item label="排序">
+          <el-input-number v-model="dictForm.sortOrder" :min="0" :max="999" />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-radio-group v-model="dictForm.status">
+            <el-radio label="active">启用</el-radio>
+            <el-radio label="inactive">禁用</el-radio>
+          </el-radio-group>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="dictDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="handleSaveDict">保存</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
+import { ElMessage } from 'element-plus'
 
 const activeTab = ref('users')
 const userDialogVisible = ref(false)
@@ -366,8 +493,113 @@ const orgTree = ref([
   { id: 3, label: '财务部' },
   { id: 4, label: '综合部' },
 ])
+
+// 数据字典管理
+const dictPage = ref(1)
+const dictPageSize = ref(10)
+const dictDialogVisible = ref(false)
+const editingDict = ref<any>(null)
+const dictSearchForm = reactive({ keyword: '', type: '' })
+
+const dictForm = reactive({
+  dictType: 'system',
+  dictCode: '',
+  dictName: '',
+  dictValue: '',
+  sortOrder: 0,
+  status: 'active'
+})
+
+const dictData = ref([
+  { id: 1, dictType: 'system', dictCode: 'SYS_STATUS', dictName: '系统状态', dictValue: 'active', sortOrder: 1, status: 'active' },
+  { id: 2, dictType: 'system', dictCode: 'USER_STATUS', dictName: '用户状态', dictValue: 'active', sortOrder: 2, status: 'active' },
+  { id: 3, dictType: 'system', dictCode: 'GENDER', dictName: '性别', dictValue: 'male', sortOrder: 3, status: 'active' },
+  { id: 4, dictType: 'business', dictCode: 'PROCUREMENT_TYPE', dictName: '采购类型', dictValue: 'direct', sortOrder: 1, status: 'active' },
+  { id: 5, dictType: 'business', dictCode: 'CONTRACT_STATUS', dictName: '合同状态', dictValue: 'pending', sortOrder: 2, status: 'active' },
+  { id: 6, dictType: 'business', dictCode: 'REVIEW_STATUS', dictName: '评审状态', dictValue: 'preparing', sortOrder: 3, status: 'active' },
+  { id: 7, dictType: 'business', dictCode: 'TENDER_METHOD', dictName: '招标方式', dictValue: 'open', sortOrder: 4, status: 'active' },
+  { id: 8, dictType: 'system', dictCode: 'LOG_LEVEL', dictName: '日志级别', dictValue: 'info', sortOrder: 5, status: 'active' },
+])
+
+const filteredDictData = computed(() => {
+  return dictData.value.filter(d => {
+    const matchKeyword = !dictSearchForm.keyword || d.dictCode.includes(dictSearchForm.keyword) || d.dictName.includes(dictSearchForm.keyword)
+    const matchType = !dictSearchForm.type || d.dictType === dictSearchForm.type
+    return matchKeyword && matchType
+  })
+})
+
+const paginatedDictData = computed(() => {
+  const start = (dictPage.value - 1) * dictPageSize.value
+  return filteredDictData.value.slice(start, start + dictPageSize.value)
+})
+
+watch(filteredDictData, () => { dictPage.value = 1 })
+
+const openDictDialog = (row?: any) => {
+  editingDict.value = row || null
+  if (row) {
+    Object.assign(dictForm, {
+      dictType: row.dictType,
+      dictCode: row.dictCode,
+      dictName: row.dictName,
+      dictValue: row.dictValue,
+      sortOrder: row.sortOrder,
+      status: row.status
+    })
+  } else {
+    Object.assign(dictForm, { dictType: 'system', dictCode: '', dictName: '', dictValue: '', sortOrder: 0, status: 'active' })
+  }
+  dictDialogVisible.value = true
+}
+
+const handleSaveDict = () => {
+  if (editingDict.value) {
+    const idx = dictData.value.findIndex(d => d.id === editingDict.value.id)
+    if (idx !== -1) Object.assign(dictData.value[idx], dictForm)
+  } else {
+    dictData.value.push({ id: Math.max(...dictData.value.map(d => d.id)) + 1, ...dictForm })
+  }
+  dictDialogVisible.value = false
+}
+
+const handleDeleteDict = (row: any) => {
+  dictData.value = dictData.value.filter(d => d.id !== row.id)
+}
+
+// 系统配置
+const sysConfigForm = reactive({
+  sessionTimeout: 30,
+  passwordMinLength: 8,
+  requireUppercase: true,
+  requireLowercase: true,
+  requireNumber: true,
+  requireSpecial: false,
+  passwordExpireDays: 90,
+  maxLoginFailures: 5,
+  backupCycle: 'weekly',
+  dataRetentionDays: 365,
+  twoFactorEnabled: false,
+  allowConcurrentLogin: true,
+  maintenanceMode: false
+})
+
+const originalConfig = { ...sysConfigForm }
+
+const handleSaveConfig = () => {
+  Object.assign(originalConfig, sysConfigForm)
+  ElMessage.success('配置保存成功')
+}
+
+const handleResetConfig = () => {
+  Object.assign(sysConfigForm, originalConfig)
+}
 </script>
 
 <style scoped lang="scss">
-.page { .page-header { margin-bottom: 24px; h2 { color: #f0f6fc; font-size: 22px; font-weight: 600; } } .tab-header { display: flex; justify-content: space-between; margin-bottom: 16px; gap: 12px; } }
+.page {
+  .page-header { margin-bottom: 24px; h2 { color: #f0f6fc; font-size: 22px; font-weight: 600; } }
+  .tab-header { display: flex; justify-content: space-between; margin-bottom: 16px; gap: 12px; }
+  .config-form { max-width: 600px; .form-tip { margin-left: 8px; color: #8b949e; } .form-footer { margin-top: 24px; padding-left: 140px; } }
+}
 </style>

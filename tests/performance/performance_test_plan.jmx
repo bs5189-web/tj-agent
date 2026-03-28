@@ -1,0 +1,560 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.5">
+  <hashTree>
+    <!-- 智能化采购系统性能测试计划 -->
+
+    <!-- 1. 全局配置 -->
+    <Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="全局变量">
+      <collectionProp name="Arguments.arguments">
+        <elementProp name="BASE_URL" elementType="Argument">
+          <stringProp name="Argument.name">BASE_URL</stringProp>
+          <stringProp name="Argument.value">http://localhost:3000/api</stringProp>
+        </elementProp>
+        <elementProp name="THREAD_COUNT" elementType="Argument">
+          <stringProp name="Argument.name">THREAD_COUNT</stringProp>
+          <stringProp name="Argument.value">100</stringProp>
+        </elementProp>
+        <elementProp name="RAMP_UP_PERIOD" elementType="Argument">
+          <stringProp name="Argument.name">RAMP_UP_PERIOD</stringProp>
+          <stringProp name="Argument.value">60</stringProp>
+        </elementProp>
+        <elementProp name="DURATION" elementType="Argument">
+          <stringProp name="Argument.name">DURATION</stringProp>
+          <stringProp name="Argument.value">600</stringProp>
+        </elementProp>
+        <elementProp name="LOOP_COUNT" elementType="Argument">
+          <stringProp name="Argument.name">LOOP_COUNT</stringProp>
+          <stringProp name="Argument.value">-1</stringProp>
+        </elementProp>
+      </collectionProp>
+    </Arguments>
+
+    <!-- 2. HTTP请求默认值 -->
+    <ConfigTestElement guiclass="HttpDefaultsGui" testclass="ConfigTestElement" testname="HTTP请求默认值">
+      <stringProp name="HTTPSampler.domain">localhost</stringProp>
+      <stringProp name="HTTPSampler.port">3000</stringProp>
+      <stringProp name="HTTPSampler.protocol">http</stringProp>
+      <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+      <stringProp name="HTTPSampler.path"></stringProp>
+      <boolProp name="HTTPSampler.image_parser">true</boolProp>
+      <boolProp name="HTTPSampler.concurrentPool">true</boolProp>
+      <intProp name="HttpMonitor.size">200</intProp>
+    </ConfigTestElement>
+
+    <!-- 3. Header管理器 -->
+    <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header管理器">
+      <collectionProp name="HeaderManager.headers">
+        <elementProp name="" elementType="Header">
+          <stringProp name="Header.name">Content-Type</stringProp>
+          <stringProp name="Header.value">application/json</stringProp>
+        </elementProp>
+        <elementProp name="" elementType="Header">
+          <stringProp name="Header.name">Authorization</stringProp>
+          <stringProp name="Header.value">Bearer ${AUTH_TOKEN}</stringProp>
+        </elementProp>
+      </collectionProp>
+    </HeaderManager>
+
+    <!-- 4. Cookie管理器 -->
+    <CookieManager guiclass="CookiePanel" testclass="CookieManager" testname="HTTP Cookie管理器">
+      <collectionProp name="CookieManager.cookies">
+        <boolProp name="CookieManager.clearEachIteration">true</boolProp>
+      </collectionProp>
+    </CookieManager>
+
+    <hashTree/>
+
+    <!-- 5. 线程组: 基础负载测试 -->
+    <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="TG-01: 基础负载测试">
+      <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+      <boolProp name="ThreadGroup.scheduler">true</boolProp>
+      <stringProp name="ThreadGroup.duration">${DURATION}</stringProp>
+      <stringProp name="ThreadGroup.ramp_time">${RAMP_UP_PERIOD}</stringProp>
+      <boolProp name="ThreadGroup.serialize_threadgroups">false</boolProp>
+      <threadProps/>
+      <stringProp name="ThreadGroup.num_threads">${THREAD_COUNT}</stringProp>
+      <stringProp name="ThreadGroup.start_time">2026-03-28 00:00:00</stringProp>
+      <stringProp name="ThreadGroup.end_time">2026-03-28 00:10:00</stringProp>
+    </ThreadGroup>
+
+    <hashTree>
+
+      <!-- 5.1 登录场景 -->
+      <RecordingController guiclass="RecordingControllerGui" testclass="RecordingController" testname="登录场景" optimizedVersion="7">
+        <stringProp name="RecordingController.optimizationMode">10</stringProp>
+      </RecordingController>
+
+      <hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /login">
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="username" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">true</boolProp>
+                <stringProp name="Argument.value">admin</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">username</stringProp>
+              </elementProp>
+              <elementProp name="password" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">true</boolProp>
+                <stringProp name="Argument.value">Admin@123456</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">password</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <stringProp name="HTTPSampler.path">/auth/login</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.auto_redirects">false</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <stringProp name="HTTPSampler.connect_timeout"></stringProp>
+          <stringProp name="HTTPSampler.response_timeout"></stringProp>
+        </HTTPSamplerProxy>
+
+        <JSONExtractor guiclass="JSONExtractorGui" testclass="JSONExtractor" testname="提取Token">
+          <stringProp name="JSONExtractor.names">token</stringProp>
+          <stringProp name="JSONExtractor.jsonQuery">$.data.token</stringProp>
+          <stringProp name="JSONExtractor.matchnumbers">1</stringProp>
+          <stringProp name="JSONExtractor.default">NOT_FOUND</stringProp>
+        </JSONExtractor>
+      </hashTree>
+
+      <!-- 5.2 采购计划查询场景 -->
+      <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="采购计划查询">
+        <boolProp name="TransactionController.includeTimers">false</boolProp>
+        <boolProp name="TransactionController.parent">true</boolProp>
+      </TransactionController>
+
+      <hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /plan/year/list">
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="pageNum" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">1</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">pageNum</stringProp>
+              </elementProp>
+              <elementProp name="pageSize" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">10</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">pageSize</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <stringProp name="HTTPSampler.path">/plan/year/list</stringProp>
+        </HTTPSamplerProxy>
+
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /plan/year/detail">
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <stringProp name="HTTPSampler.path">/plan/year/detail?planId=PLAN-001</stringProp>
+        </HTTPSamplerProxy>
+
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /plan/statistics">
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="startDate" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">2026-01-01</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">startDate</stringProp>
+              </elementProp>
+              <elementProp name="endDate" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">2026-03-31</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">endDate</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <stringProp name="HTTPSampler.path">/plan/statistics</stringProp>
+        </HTTPSamplerProxy>
+      </hashTree>
+
+      <!-- 5.3 采购需求场景 -->
+      <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="采购需求操作">
+        <boolProp name="TransactionController.includeTimers">false</boolProp>
+        <boolProp name="TransactionController.parent">true</boolProp>
+      </TransactionController>
+
+      <hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /demand/create">
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="demandName" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">true</boolProp>
+                <stringProp name="Argument.value">性能测试需求-${__time()}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">demandName</stringProp>
+              </elementProp>
+              <elementProp name="demandType" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">GOODS</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">demandType</stringProp>
+              </elementProp>
+              <elementProp name="budgetAmount" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">100000</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">budgetAmount</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <stringProp name="HTTPSampler.path">/demand/create</stringProp>
+        </HTTPSamplerProxy>
+
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /demand/list">
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <stringProp name="HTTPSampler.path">/demand/list?pageNum=1&pageSize=20</stringProp>
+        </HTTPSamplerProxy>
+
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /demand/compliance/check">
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="demandId" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">DEMAND-001</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">demandId</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <stringProp name="HTTPSampler.path">/demand/compliance/check</stringProp>
+        </HTTPSamplerProxy>
+      </hashTree>
+
+      <!-- 5.4 采购文件场景 -->
+      <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="采购文件操作">
+        <boolProp name="TransactionController.includeTimers">false</boolProp>
+        <boolProp name="TransactionController.parent">true</boolProp>
+      </TransactionController>
+
+      <hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /file/list">
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <stringProp name="HTTPSampler.path">/file/list?pageNum=1&pageSize=10</stringProp>
+        </HTTPSamplerProxy>
+
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /file/template/list">
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <stringProp name="HTTPSampler.path">/file/template/list?fileType=GOODS</stringProp>
+        </HTTPSamplerProxy>
+
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /file/compliance/check">
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="fileId" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">FILE-001</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">fileId</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <stringProp name="HTTPSampler.path">/file/compliance/check</stringProp>
+        </HTTPSamplerProxy>
+      </hashTree>
+
+      <!-- 5.5 评审场景 -->
+      <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="评审操作">
+        <boolProp name="TransactionController.includeTimers">false</boolProp>
+        <boolProp name="TransactionController.parent">true</boolProp>
+      </TransactionController>
+
+      <hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /review/list">
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <stringProp name="HTTPSampler.path">/review/list?pageNum=1&pageSize=10</stringProp>
+        </HTTPSamplerProxy>
+
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /review/result">
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <stringProp name="HTTPSampler.path">/review/result?reviewId=REVIEW-001</stringProp>
+        </HTTPSamplerProxy>
+
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /review/statistics">
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <stringProp name="HTTPSampler.path">/review/statistics?startDate=2026-01-01&endDate=2026-03-31</stringProp>
+        </HTTPSamplerProxy>
+      </hashTree>
+
+      <!-- 5.6 数据查询场景 -->
+      <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="数据查询">
+        <boolProp name="TransactionController.includeTimers">false</boolProp>
+        <boolProp name="TransactionController.parent">true</boolProp>
+      </TransactionController>
+
+      <hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /query/qa">
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="question" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">true</boolProp>
+                <stringProp name="Argument.value">2026年第一季度采购总额</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">question</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <stringProp name="HTTPSampler.path">/query/qa</stringProp>
+        </HTTPSamplerProxy>
+
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /query/filter">
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <stringProp name="HTTPSampler.path">/query/filter?purchaseType=GOODS&startDate=2026-01-01&endDate=2026-03-31</stringProp>
+        </HTTPSamplerProxy>
+      </hashTree>
+
+      <!-- 5.7 响应时间断言 -->
+      <DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="响应时间<2秒">
+        <stringProp name="DurationAssertion.duration">2000</stringProp>
+      </DurationAssertion>
+
+      <!-- 5.8 响应大小断言 -->
+      <SizeAssertion guiclass="SizeAssertionGui" testclass="SizeAssertion" testname="响应大小<500KB">
+        <stringProp name="SizeAssertion.size">500000</stringProp>
+        <stringProp name="SizeAssertion.operator">小于</stringProp>
+      </SizeAssertion>
+
+    </hashTree>
+
+    <!-- 6. 线程组: 峰值负载测试 -->
+    <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="TG-02: 峰值负载测试">
+      <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+      <boolProp name="ThreadGroup.scheduler">true</boolProp>
+      <stringProp name="ThreadGroup.duration">300</stringProp>
+      <stringProp name="ThreadGroup.ramp_time">30</stringProp>
+      <boolProp name="ThreadGroup.serialize_threadgroups">false</boolProp>
+      <threadProps/>
+      <stringProp name="ThreadGroup.num_threads">500</stringProp>
+      <stringProp name="ThreadGroup.start_time">2026-03-28 00:15:00</stringProp>
+      <stringProp name="ThreadGroup.end_time">2026-03-28 00:20:00</stringProp>
+    </ThreadGroup>
+
+    <hashTree>
+
+      <!-- 峰值测试场景: 并发创建需求 -->
+      <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /demand/create">
+        <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+          <collectionProp name="Arguments.arguments">
+            <elementProp name="demandName" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">true</boolProp>
+              <stringProp name="Argument.value">峰值测试需求-${__threadNum}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">demandName</stringProp>
+            </elementProp>
+            <elementProp name="demandType" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">false</boolProp>
+              <stringProp name="Argument.value">GOODS</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">demandType</stringProp>
+            </elementProp>
+            <elementProp name="budgetAmount" elementType="HTTPArgument">
+              <boolProp name="HTTPArgument.always_encode">false</boolProp>
+              <stringProp name="Argument.value">${__Random(10000,1000000)}</stringProp>
+              <stringProp name="Argument.metadata">=</stringProp>
+              <boolProp name="HTTPArgument.use_equals">true</boolProp>
+              <stringProp name="Argument.name">budgetAmount</stringProp>
+            </elementProp>
+          </collectionProp>
+        </elementProp>
+        <stringProp name="HTTPSampler.method">POST</stringProp>
+        <stringProp name="HTTPSampler.path">/demand/create</stringProp>
+      </HTTPSamplerProxy>
+
+      <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /demand/list">
+        <stringProp name="HTTPSampler.method">GET</stringProp>
+        <stringProp name="HTTPSampler.path">/demand/list?pageNum=1&pageSize=10</stringProp>
+      </HTTPSamplerProxy>
+
+      <!-- 峰值测试: 断言 -->
+      <DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="响应时间<5秒(峰值)">
+        <stringProp name="DurationAssertion.duration">5000</stringProp>
+      </DurationAssertion>
+
+    </hashTree>
+
+    <!-- 7. 线程组: 压力测试 -->
+    <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="TG-03: 压力测试">
+      <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+      <boolProp name="ThreadGroup.scheduler">true</boolProp>
+      <stringProp name="ThreadGroup.duration">600</stringProp>
+      <stringProp name="ThreadGroup.ramp_time">120</stringProp>
+      <boolProp name="ThreadGroup.serialize_threadgroups">false</boolProp>
+      <threadProps/>
+      <stringProp name="ThreadGroup.num_threads">1000</stringProp>
+      <stringProp name="ThreadGroup.start_time">2026-03-28 00:30:00</stringProp>
+      <stringProp name="ThreadGroup.end_time">2026-03-28 00:40:00</stringProp>
+    </ThreadGroup>
+
+    <hashTree>
+
+      <!-- 压力测试: 混合场景 -->
+      <SwitchController guiclass="SwitchControllerGui" testclass="SwitchController" testname="混合场景控制器">
+        <stringProp name="SwitchController.value">${__chooseRandom(1,2,3,4,5,RANDOM)}</stringProp>
+      </SwitchController>
+
+      <hashTree>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="场景1: 查询">
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <stringProp name="HTTPSampler.path">/plan/year/list?pageNum=1&pageSize=10</stringProp>
+        </HTTPSamplerProxy>
+
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="场景2: 创建">
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="demandName" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">true</boolProp>
+                <stringProp name="Argument.value">压力测试需求-${__time()}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">demandName</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <stringProp name="HTTPSampler.path">/demand/create</stringProp>
+        </HTTPSamplerProxy>
+
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="场景3: 统计">
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <stringProp name="HTTPSampler.path">/plan/statistics?startDate=2026-01-01&endDate=2026-03-31</stringProp>
+        </HTTPSamplerProxy>
+
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="场景4: 查询">
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <stringProp name="HTTPSampler.path">/demand/list?pageNum=1&pageSize=20</stringProp>
+        </HTTPSamplerProxy>
+
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="场景5: 文件列表">
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <stringProp name="HTTPSampler.path">/file/list?pageNum=1&pageSize=10</stringProp>
+        </HTTPSamplerProxy>
+      </hashTree>
+
+    </hashTree>
+
+    <!-- 8. 线程组: 极限测试 -->
+    <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="TG-04: 极限测试">
+      <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+      <boolProp name="ThreadGroup.scheduler">true</boolProp>
+      <stringProp name="ThreadGroup.duration">300</stringProp>
+      <stringProp name="ThreadGroup.ramp_time">60</stringProp>
+      <boolProp name="ThreadGroup.serialize_threadgroups">false</boolProp>
+      <threadProps/>
+      <stringProp name="ThreadGroup.num_threads">2000</stringProp>
+      <stringProp name="ThreadGroup.start_time">2026-03-28 00:45:00</stringProp>
+      <stringProp name="ThreadGroup.end_time">2026-03-28 00:50:00</stringProp>
+    </ThreadGroup>
+
+    <hashTree>
+
+      <!-- 极限测试: 简单查询 -->
+      <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /plan/list">
+        <stringProp name="HTTPSampler.method">GET</stringProp>
+        <stringProp name="HTTPSampler.path">/plan/list?pageNum=1&pageSize=5</stringProp>
+      </HTTPSamplerProxy>
+
+      <DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="响应时间<10秒(极限)">
+        <stringProp name="DurationAssertion.duration">10000</stringProp>
+      </DurationAssertion>
+
+    </hashTree>
+
+    <!-- 9. 监听器: 聚合报告 -->
+    <SummariserGuard guiclass="SummariserGui" testclass="SummariserGuard" testname="生成摘要结果">
+      <stringProp name="Summariser.log">true</stringProp>
+      <stringProp name="Summariser.name">summary</stringProp>
+      <stringProp name="Summariser.showFieldNames">true</stringProp>
+      <boolProp name="Summariser.generateRPC">true</boolProp>
+      <boolProp name="Summariser.successFilter">false</boolProp>
+    </SummariserGuard>
+
+    <hashTree/>
+
+    <!-- 10. 监听器: 聚合报告 -->
+    <AggreGateListener guiclass="AggreGateListenerGui" testclass="AggreGateListener" testname="聚合报告">
+      <stringProp name="AggregateReport.totalLabel">Total</stringProp>
+      <boolProp name="AggregateReport.percentage">true</boolProp>
+      <boolProp name="AggregateReport.excludeTimer">false</boolProp>
+      <boolProp name="AggregateReport.namePanel">true</boolProp>
+    </AggreGateListener>
+
+    <hashTree/>
+
+    <!-- 11. 监听器: 响应时间图表 -->
+    <RespTimeVisualizer guiclass="RespTimeVisualizerGui" testclass="RespTimeVisualizer" testname="响应时间图表"/>
+
+    <hashTree/>
+
+    <!-- 12. 监听器: 后端监听器 -->
+    <BackendListener guiclass="BackendListenerGui" testclass="BackendListener" testname="后端监听器">
+      <elementProp name="Arguments" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" enabled="true">
+        <collectionProp name="Arguments.arguments">
+          <elementProp name="graphName" elementType="Argument">
+            <stringProp name="Argument.name">graphName</stringProp>
+            <stringProp name="Argument.value">responseTimesOverTime</stringProp>
+          </elementProp>
+        </collectionProp>
+      </elementProp>
+      <stringProp name="BackendListener.backend_classname">org.apache.jmeter.visualizers.backend.BackendListenerClient</stringProp>
+    </BackendListener>
+
+    <hashTree/>
+
+    <!-- 13. 监听器: 查看结果树 -->
+    <ViewResultsFullVisualizer guiclass="ViewResultsFullVisualizerGui" testclass="ViewResultsFullVisualizer" testname="查看结果树">
+      <boolProp name="showContent">true</boolProp>
+      <boolProp name="showHeaders">true</boolProp>
+      <boolProp name="showCode">true</boolProp>
+      <boolProp name="showMessage">true</boolProp>
+      <boolProp name="showRequestHeaders">true</boolProp>
+      <boolProp name="showResponseHeaders">true</boolProp>
+      <boolProp name="showSamplerData">true</boolProp>
+      <boolProp name="showTimestamp">true</boolProp>
+    </ViewResultsFullVisualizer>
+
+    <hashTree/>
+
+    <!-- 14. 监听器: 写入文件 -->
+    <ResultSaver guiclass="ResultSaverGui" testclass="ResultSaver" testname="保存结果到文件">
+      <stringProp name="ResultSaver.filename">/data/tests/performance/results/jmeter_results_${__time()}.jtl</stringProp>
+      <boolProp name="ResultSaver.successOnly">false</boolProp>
+      <boolProp name="ResultSaver.errorsOnly">false</boolProp>
+      <boolProp name="ResultSaver.addTimestamp">true</boolProp>
+    </ResultSaver>
+
+    <hashTree/>
+
+    <!-- 15. 监听器: HTML报告生成 -->
+    <HtmlReporter guiclass="HtmlReporterGui" testclass="HtmlReporter" testname="生成HTML报告">
+      <stringProp name="htmlReporter.exportedFile">/data/tests/performance/results/html_report</stringProp>
+      <boolProp name="htmlReporter. FiltersToUse">false</boolProp>
+    </HtmlReporter>
+
+    <hashTree/>
+
+  </hashTree>
+</jmeterTestPlan>

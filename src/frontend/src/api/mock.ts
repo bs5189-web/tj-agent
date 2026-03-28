@@ -1,5 +1,8 @@
 // 采购系统Mock数据
 
+// 项目编号前缀列表，用于串联各模块数据
+const projectNos = ['PJ-2024-001', 'PJ-2024-002', 'PJ-2024-003', 'PJ-2024-004', 'PJ-2024-005']
+
 export interface Plan {
   id: number
   planNo: string
@@ -9,6 +12,7 @@ export interface Plan {
   itemCount: number
   status: 'draft' | 'pending' | 'approved' | 'rejected'
   createTime: string
+  projectNo?: string  // 关联项目编号
 }
 
 export interface Requirement {
@@ -21,6 +25,9 @@ export interface Requirement {
   urgencyLevel: 'low' | 'medium' | 'high'
   status: 'draft' | 'checking' | 'pending' | 'approved' | 'rejected'
   createTime: string
+  projectNo?: string  // 关联项目编号
+  planId?: number     // 关联计划ID
+  contractId?: number // 关联合同ID
 }
 
 export interface Document {
@@ -32,6 +39,8 @@ export interface Document {
   version: string
   status: 'draft' | 'pending' | 'approved'
   createTime: string
+  projectNo?: string  // 关联项目编号
+  requirementId?: number // 关联需求ID
 }
 
 export interface Review {
@@ -45,6 +54,8 @@ export interface Review {
   endTime: string
   score?: number
   scoreTime?: string
+  projectNo?: string  // 关联项目编号
+  contractId?: number // 关联合同ID
 }
 
 export interface Contract {
@@ -55,6 +66,8 @@ export interface Contract {
   totalAmount: number
   signDate: string
   status: 'draft' | 'pending' | 'signed' | 'performing' | 'completed'
+  projectNo?: string  // 关联项目编号
+  requirementId?: number // 关联需求ID
 }
 
 // 部门列表
@@ -99,9 +112,10 @@ export const planData: Plan[] = Array.from({ length: 120 }, (_, i) => ({
   itemCount: randomInt(5, 100),
   status: randomPick(planStatuses),
   createTime: generateDate(randomInt(0, 90)),
+  projectNo: projectNos[i % projectNos.length],
 }))
 
-// 生成采购需求数据 (80条)
+// 生成采购需求数据 (80条) - 关联到计划和合同
 export const requirementData: Requirement[] = Array.from({ length: 80 }, (_, i) => ({
   id: i + 1,
   reqNo: `REQ-2024-${156 + i}`,
@@ -112,9 +126,12 @@ export const requirementData: Requirement[] = Array.from({ length: 80 }, (_, i) 
   urgencyLevel: randomPick(urgencyLevels),
   status: randomPick(requirementStatuses),
   createTime: generateDate(randomInt(0, 60)),
+  projectNo: projectNos[i % projectNos.length],
+  planId: (i % 40) + 1,      // 关联到前40个计划
+  contractId: (i % 30) + 1,  // 部分需求关联到合同
 }))
 
-// 生成采购文档数据 (60条)
+// 生成采购文档数据 (60条) - 关联到需求
 export const documentData: Document[] = Array.from({ length: 60 }, (_, i) => ({
   id: i + 1,
   docNo: `DOC-2024-${String(i + 1).padStart(3, '0')}`,
@@ -124,9 +141,11 @@ export const documentData: Document[] = Array.from({ length: 60 }, (_, i) => ({
   version: `V1.${randomInt(0, 9)}`,
   status: randomPick(documentStatuses),
   createTime: generateDate(randomInt(0, 45)),
+  projectNo: projectNos[i % projectNos.length],
+  requirementId: (i % 40) + 1,  // 关联到需求
 }))
 
-// 生成采购评审数据 (50条)
+// 生成采购评审数据 (50条) - 关联到合同
 export const reviewData: Review[] = Array.from({ length: 50 }, (_, i) => ({
   id: i + 1,
   sessionNo: `REV-2024-${String(i + 1).padStart(3, '0')}`,
@@ -136,9 +155,11 @@ export const reviewData: Review[] = Array.from({ length: 50 }, (_, i) => ({
   progress: randomInt(0, 100),
   startTime: randomInt(0, 1) === 0 ? '-' : `2024-03-${randomInt(10, 25)} 09:00`,
   endTime: randomInt(0, 1) === 0 ? '-' : `2024-03-${randomInt(10, 25)} 17:00`,
+  projectNo: projectNos[i % projectNos.length],
+  contractId: (i % 30) + 1,  // 关联到合同
 }))
 
-// 生成采购合同数据 (80条)
+// 生成采购合同数据 (80条) - 关联到需求
 export const contractData: Contract[] = Array.from({ length: 80 }, (_, i) => ({
   id: i + 1,
   contractNo: `CON-2024-${String(87 + i).padStart(3, '0')}`,
@@ -147,6 +168,8 @@ export const contractData: Contract[] = Array.from({ length: 80 }, (_, i) => ({
   totalAmount: randomInt(100000, 5000000),
   signDate: generateDate(randomInt(0, 120)),
   status: randomPick(contractStatuses),
+  projectNo: projectNos[i % projectNos.length],
+  requirementId: (i % 40) + 1,  // 关联到需求
 }))
 
 // 待办事项

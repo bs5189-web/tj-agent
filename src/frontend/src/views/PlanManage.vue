@@ -48,11 +48,12 @@
           </template>
         </el-table-column>
         <el-table-column prop="createTime" label="创建时间" width="120" />
-        <el-table-column label="操作" width="180">
+        <el-table-column label="操作" width="280">
           <template #default="{ row }">
             <el-button link type="primary" size="small" @click="openViewDialog(row)">查看</el-button>
             <el-button link type="primary" size="small" @click="openEditDialog(row)">编辑</el-button>
             <el-button link type="success" size="small" v-if="row.status === 'draft'" @click="handleSubmitPlan(row)">提交</el-button>
+            <el-button link type="warning" size="small" @click="viewRelatedRequirements(row)">查看关联需求</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -114,8 +115,11 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { planData as mockPlanData } from '@/api/mock'
 import type { Plan } from '@/api/mock'
+
+const router = useRouter()
 
 const dialogVisible = ref(false)
 const viewDialogVisible = ref(false)
@@ -260,6 +264,14 @@ const handleExport = () => {
   link.download = `采购计划_${new Date().toISOString().split('T')[0]}.csv`
   link.click()
   URL.revokeObjectURL(url)
+}
+
+// 查看关联需求 - 跳转到需求页面并筛选
+const viewRelatedRequirements = (row: Plan) => {
+  router.push({
+    name: 'RequirementByPlan',
+    params: { planId: row.id.toString() }
+  })
 }
 </script>
 

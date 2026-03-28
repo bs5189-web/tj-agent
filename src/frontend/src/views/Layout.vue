@@ -44,7 +44,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { Bell, Avatar, Fold, Expand, Odometer, Calendar, Document, Folder, Star, Tickets, Setting } from '@element-plus/icons-vue'
+import { Bell, Avatar, Fold, Expand, Odometer, Calendar, Document, Folder, Star, Tickets, Setting, FolderOpened, Search } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const collapsed = ref(false)
@@ -56,6 +56,8 @@ const menuItems = [
   { path: '/document', title: '采购文件', icon: Folder },
   { path: '/review', title: '采购评审', icon: Star },
   { path: '/contract', title: '合同管理', icon: Tickets },
+  { path: '/archive', title: '档案管理', icon: FolderOpened },
+  { path: '/query', title: '数据查询', icon: Search },
   { path: '/system', title: '系统管理', icon: Setting },
 ]
 </script>

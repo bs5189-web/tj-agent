@@ -3,10 +3,10 @@
     <div class="page-header">
       <h2>数据概览</h2>
     </div>
-    
+
     <el-row :gutter="16" class="stats-row">
       <el-col :xs="24" :sm="12" :lg="6" v-for="stat in stats" :key="stat.label">
-        <div class="data-card">
+        <div class="data-card" :class="{ clickable: stat.routeName }" @click="handleCardClick(stat)">
           <div class="data-label">{{ stat.label }}</div>
           <div class="data-value">{{ stat.value }}</div>
           <div class="data-trend" :class="stat.trend > 0 ? 'up' : 'down'">
@@ -72,21 +72,37 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import * as echarts from 'echarts'
 import { todoListData, warningListData, getDashboardStats } from '@/api/mock'
 
+const router = useRouter()
 const trendChartRef = ref<HTMLElement>()
 const pieChartRef = ref<HTMLElement>()
 
 const stats = computed(() => {
   const { totalPlans, pendingRequirements, performingContracts, completionRate } = getDashboardStats()
   return [
-    { label: '年度采购计划', value: totalPlans.toString(), trend: 12.5 },
-    { label: '待处理需求', value: pendingRequirements.toString(), trend: -5.2 },
-    { label: '执行中合同', value: performingContracts.toString(), trend: 8.1 },
-    { label: '履约完成率', value: `${completionRate}%`, trend: 2.3 },
+    { label: '年度采购计划', value: totalPlans.toString(), trend: 12.5, routeName: 'Plan' },
+    { label: '待处理需求', value: pendingRequirements.toString(), trend: -5.2, routeName: 'RequirementByStatus', status: 'pending' },
+    { label: '执行中合同', value: performingContracts.toString(), trend: 8.1, routeName: 'ContractByRequirement', status: 'performing' },
+    { label: '履约完成率', value: `${completionRate}%`, trend: 2.3, routeName: 'Contract' },
   ]
 })
+
+// Handle card click navigation
+const handleCardClick = (stat: any) => {
+  if (!stat.routeName) return
+
+  if (stat.routeName === 'RequirementByStatus') {
+    router.push({ name: 'RequirementByStatus', params: { status: stat.status } })
+  } else if (stat.routeName === 'ContractByRequirement') {
+    // Navigate to contract list with performing filter via query
+    router.push({ name: 'Contract', query: { status: stat.status } })
+  } else {
+    router.push({ name: stat.routeName })
+  }
+}
 
 const todoList = todoListData
 
@@ -153,5 +169,15 @@ onMounted(() => {
   .charts-row { margin-bottom: 16px; }
   .bottom-row { margin-bottom: 16px; }
   .chart-container { height: 280px; }
+  .data-card {
+    &.clickable {
+      cursor: pointer;
+      transition: all 0.3s ease;
+      &:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 102, 255, 0.2);
+      }
+    }
+  }
 }
 </style>
