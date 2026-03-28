@@ -4,7 +4,7 @@
       <h2>采购计划管理</h2>
       <div class="header-actions">
         <el-button>导出</el-button>
-        <el-button type="primary" @click="dialogVisible = true">新建计划</el-button>
+        <el-button type="primary" @click="openCreateDialog">新建计划</el-button>
       </div>
     </div>
 
@@ -27,13 +27,12 @@
             <el-option label="已驳回" value="rejected" />
           </el-select>
         </el-form-item>
-        <el-form-item><el-button @click="handleFilter">筛选</el-button></el-form-item>
         <el-form-item><el-button @click="handleReset">重置</el-button></el-form-item>
       </el-form>
     </div>
 
     <div class="card">
-      <el-table :data="filteredData" stripe>
+      <el-table :data="paginatedData" stripe>
         <el-table-column prop="planNo" label="计划编号" width="150" />
         <el-table-column prop="planYear" label="计划年度" width="100" />
         <el-table-column prop="unitName" label="编制单位" width="120" />
@@ -51,41 +50,46 @@
         <el-table-column prop="createTime" label="创建时间" width="120" />
         <el-table-column label="操作" width="180">
           <template #default="{ row }">
-            <el-button link type="primary" size="small" @click="handleView(row)">查看</el-button>
-            <el-button link type="primary" size="small">编辑</el-button>
-            <el-button link type="success" size="small" v-if="row.status === 'draft'">提交</el-button>
+            <el-button link type="primary" size="small" @click="openViewDialog(row)">查看</el-button>
+            <el-button link type="primary" size="small" @click="openEditDialog(row)">编辑</el-button>
+            <el-button link type="success" size="small" v-if="row.status === 'draft'" @click="handleSubmitPlan(row)">提交</el-button>
           </template>
         </el-table-column>
       </el-table>
       <el-pagination
+        v-model:current-page="currentPage"
+        v-model:page-size="pageSize"
         :total="filteredData.length"
-        :page-size="10"
-        layout="prev, pager, next"
+        :page-sizes="[10, 20, 50, 100]"
+        layout="total, sizes, prev, pager, next"
         style="margin-top: 16px; justify-content: flex-end;"
       />
     </div>
 
-    <el-dialog v-model="dialogVisible" title="新建采购计划" width="600px">
+    <el-dialog v-model="dialogVisible" :title="isEdit ? '编辑采购计划' : '新建采购计划'" width="600px">
       <el-form label-width="100px">
         <el-form-item label="计划年度">
-          <el-select v-model="newPlanForm.planYear" style="width: 100%">
+          <el-select v-model="formData.planYear" style="width: 100%">
             <el-option label="2024年" value="2024" />
             <el-option label="2025年" value="2025" />
           </el-select>
         </el-form-item>
         <el-form-item label="编制单位">
-          <el-input v-model="newPlanForm.unitName" placeholder="请输入单位名称" />
+          <el-input v-model="formData.unitName" placeholder="请输入单位名称" />
         </el-form-item>
         <el-form-item label="预算总额">
-          <el-input v-model="newPlanForm.totalAmount" type="number" placeholder="请输入预算总额"><template #append>元</template></el-input>
+          <el-input v-model="formData.totalAmount" type="number" placeholder="请输入预算总额"><template #append>元</template></el-input>
+        </el-form-item>
+        <el-form-item label="明细项数">
+          <el-input v-model="formData.itemCount" type="number" placeholder="请输入明细项数" />
         </el-form-item>
         <el-form-item label="备注">
-          <el-input v-model="newPlanForm.remark" type="textarea" :rows="3" placeholder="请输入备注信息" />
+          <el-input v-model="formData.remark" type="textarea" :rows="3" placeholder="请输入备注信息" />
         </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit">创建</el-button>
+        <el-button type="primary" @click="handleSave">保存</el-button>
       </template>
     </el-dialog>
 
@@ -109,17 +113,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue'
-import { planData } from '@/api/mock'
+import { ref, reactive, computed, watch } from 'vue'
+import { planData as mockPlanData } from '@/api/mock'
+import type { Plan } from '@/api/mock'
 
 const dialogVisible = ref(false)
 const viewDialogVisible = ref(false)
-const viewData = ref<any>(null)
+const isEdit = ref(false)
+const editingId = ref<number | null>(null)
+const viewData = ref<Plan | null>(null)
 
-const newPlanForm = reactive({
+const currentPage = ref(1)
+const pageSize = ref(10)
+
+const formData = reactive({
   planYear: '2024',
   unitName: '',
   totalAmount: '',
+  itemCount: '',
   remark: ''
 })
 
@@ -129,9 +140,9 @@ const searchForm = reactive({
   status: ''
 })
 
-let nextId = planData.length + 1
+let nextId = Math.max(...mockPlanData.map(p => p.id)) + 1
 
-const allData = ref([...planData])
+const allData = ref<Plan[]>([...mockPlanData])
 
 const filteredData = computed(() => {
   return allData.value.filter(item => {
@@ -142,29 +153,74 @@ const filteredData = computed(() => {
   })
 })
 
-const handleView = (row: any) => {
+const paginatedData = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = start + pageSize.value
+  return filteredData.value.slice(start, end)
+})
+
+watch(filteredData, () => {
+  currentPage.value = 1
+})
+
+const openCreateDialog = () => {
+  isEdit.value = false
+  editingId.value = null
+  Object.assign(formData, { planYear: '2024', unitName: '', totalAmount: '', itemCount: '', remark: '' })
+  dialogVisible.value = true
+}
+
+const openEditDialog = (row: Plan) => {
+  isEdit.value = true
+  editingId.value = row.id
+  Object.assign(formData, {
+    planYear: row.planYear.toString(),
+    unitName: row.unitName,
+    totalAmount: row.totalAmount.toString(),
+    itemCount: row.itemCount.toString(),
+    remark: ''
+  })
+  dialogVisible.value = true
+}
+
+const openViewDialog = (row: Plan) => {
   viewData.value = { ...row }
   viewDialogVisible.value = true
 }
 
-const handleSubmit = () => {
-  const newPlan = {
-    id: nextId++,
-    planNo: `PLAN-2024-${String(nextId).padStart(3, '0')}`,
-    planYear: parseInt(newPlanForm.planYear),
-    unitName: newPlanForm.unitName,
-    totalAmount: parseInt(newPlanForm.totalAmount) || 0,
-    itemCount: 0,
-    status: 'draft' as const,
-    createTime: new Date().toISOString().split('T')[0]
+const handleSave = () => {
+  if (isEdit.value && editingId.value !== null) {
+    const index = allData.value.findIndex(p => p.id === editingId.value)
+    if (index !== -1) {
+      allData.value[index] = {
+        ...allData.value[index],
+        planYear: parseInt(formData.planYear),
+        unitName: formData.unitName,
+        totalAmount: parseInt(formData.totalAmount) || 0,
+        itemCount: parseInt(formData.itemCount) || 0
+      }
+    }
+  } else {
+    const newPlan: Plan = {
+      id: nextId++,
+      planNo: `PLAN-2024-${String(nextId).padStart(3, '0')}`,
+      planYear: parseInt(formData.planYear),
+      unitName: formData.unitName,
+      totalAmount: parseInt(formData.totalAmount) || 0,
+      itemCount: parseInt(formData.itemCount) || 0,
+      status: 'draft',
+      createTime: new Date().toISOString().split('T')[0]
+    }
+    allData.value.unshift(newPlan)
   }
-  allData.value.unshift(newPlan)
   dialogVisible.value = false
-  Object.assign(newPlanForm, { planYear: '2024', unitName: '', totalAmount: '', remark: '' })
 }
 
-const handleFilter = () => {
-  // 筛选由 computed 属性自动处理，这里可以添加额外逻辑
+const handleSubmitPlan = (row: Plan) => {
+  const index = allData.value.findIndex(p => p.id === row.id)
+  if (index !== -1) {
+    allData.value[index] = { ...allData.value[index], status: 'pending' }
+  }
 }
 
 const handleReset = () => {
