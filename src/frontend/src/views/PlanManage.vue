@@ -3,7 +3,7 @@
     <div class="page-header">
       <h2>采购计划管理</h2>
       <div class="header-actions">
-        <el-button>导出</el-button>
+        <el-button @click="handleExport">导出</el-button>
         <el-button type="primary" @click="openCreateDialog">新建计划</el-button>
       </div>
     </div>
@@ -237,6 +237,29 @@ const getStatusType = (status: string) => {
 const getStatusLabel = (status: string) => {
   const map: Record<string, string> = { draft: '草稿', pending: '审批中', approved: '已通过', rejected: '已驳回' }
   return map[status] || status
+}
+
+const handleExport = () => {
+  const headers = ['计划编号', '计划年度', '编制单位', '总金额(元)', '明细项数', '状态', '创建时间']
+  const rows = filteredData.value.map(item => [
+    item.planNo,
+    item.planYear,
+    item.unitName,
+    item.totalAmount,
+    item.itemCount,
+    getStatusLabel(item.status),
+    item.createTime
+  ])
+
+  const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n')
+  const BOM = '\uFEFF'
+  const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `采购计划_${new Date().toISOString().split('T')[0]}.csv`
+  link.click()
+  URL.revokeObjectURL(url)
 }
 </script>
 
